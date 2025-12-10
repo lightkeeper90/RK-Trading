@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chicken Claypot IPO Trading Terminal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- PWA + Icons -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#020617" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+
+  <style>
+    :root {
+      --bg: #020617;
+      --border: #1f2937;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.15);
+      --danger: #ef4444;
+      --text: #e5e7eb;
+      --text-muted: #9ca3af;
+      --shadow-soft: 0 18px 45px rgba(0,0,0,0.55);
+      --radius-lg: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: radial-gradient(circle at top, #020617 0, #000 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app-shell {
+      max-width: 1100px;
+      width: 100%;
+      background: #020617;
+      border-radius: 24px;
+      border: 1px solid #111827;
+      box-shadow: var(--shadow-soft);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .ticker {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .badge-ipo {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .badge-ipo::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(34,197,94,0.8);
+    }
+
+    .time-info {
+      text-align: right;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .time-info span {
+      display: block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New";
+      font-size: 12px;
+      color: var(--text);
+      margin-top: 3px;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      body { padding: 10px; }
+      .app-shell { padding: 16px; }
+      .content { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: #020617;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .mini-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .price-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+
+    .price-main {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    #currentPrice {
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .price-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .price-change.down {
+      background: rgba(239,68,68,0.12);
+      color: var(--danger);
+    }
+
+    .stat-block {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .stat-block div span.value {
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    canvas {
+      width: 100%;
+      height: 180px;
+      margin-top: 10px;
+      background: #020617;
+      border-radius: 12px;
+    }
+
+    .order-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .order-type-toggle {
+      display: flex;
+      background: #020617;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 3px;
+      gap: 4px;
+    }
+
+    .order-type-toggle button {
+      flex: 1;
+      border: none;
+      color: var(--text-muted);
+      background: transparent;
+      padding: 7px 8px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .order-type-toggle button.active.buy {
+      background: var(--accent);
+      color: #022c22;
+    }
+
+    .order-type-toggle button.active.sell {
+      background: var(--danger);
+      color: #450a0a;
+    }
+
+    .field-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 12px;
+    }
+
+    .form-field label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .form-field input {
+      background: #020617;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 8px;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+      outline: none;
+    }
+
+    .form-field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(34,197,94,0.4);
+    }
+
+    .order-button {
+      width: 100%;
+      border-radius: 12px;
+      padding: 10px;
+      border: none;
+      color: #022c22;
+      font-weight: 600;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 4px;
+    }
+
+    .order-button.buy {
+      background: linear-gradient(135deg,#16a34a,#22c55e);
+    }
+
+    .order-button.sell {
+      background: linear-gradient(135deg,#dc2626,#ef4444);
+      color: #450a0a;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 11px;
+    }
+
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .summary-item .label {
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 10px;
+    }
+
+    .summary-item .value {
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+    }
+
+    .value-positive { color: var(--accent); }
+    .value-negative { color: var(--danger); }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+
+    <header class="app-header">
+      <div>
+        <span class="badge-ipo">Live IPO · Orderbook</span>
+        <h1>Chicken Claypot IPO <span class="ticker">CHK-CLYP</span></h1>
+      </div>
+
+      <div class="time-info">
+        <span>Elapsed</span>
+        <span id="elapsedTime">00:00</span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- PRICE + CHART -->
+      <section class="card">
+        <div class="card-header">
+          <h2>Price &amp; Chart</h2>
+          <span class="mini-label">IPO Opening Session</span>
+        </div>
+
+        <div class="price-line">
+          <div class="price-main">
+            <span id="currentPrice">$10.00</span>
+            <span id="priceChange" class="price-change">+0.00 (0.0%)</span>
+          </div>
+          <div class="stat-block">
+            <div>Open: <span class="value" id="openPrice">$10.00</span></div>
+            <div>High: <span class="value" id="highPrice">$10.00</span></div>
+          </div>
+        </div>
+
+        <small class="mini-label">1s interval price updates</small>
+
+        <canvas id="priceChart"></canvas>
+      </section>
+
+      <!-- ORDER TICKET -->
+      <section class="card">
+        <div class="card-header">
+          <h2>Order Ticket</h2>
+          <span class="mini-label">Account Balance &amp; Position</span>
+        </div>
+
+        <div class="order-panel">
+          <div class="order-type-toggle">
+            <button id="buyTab" class="active buy">Buy</button>
+            <button id="sellTab" class="sell">Sell</button>
+          </div>
+
+          <div class="field-group">
+            <div class="form-field">
+              <label for="qtyInput">Quantity</label>
+              <input id="qtyInput" type="number" value="10" min="1" step="1" />
+            </div>
+            <div class="form-field">
+              <label>Notional</label>
+              <input id="notional" type="text" value="$100.00" readonly />
+            </div>
+          </div>
+
+          <button id="orderBtn" class="order-button buy">
+            Buy Chicken Claypot IPO
+          </button>
+
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="label">Cash</span>
+              <span class="value" id="cashBalance">$1,000.00</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Position</span>
+              <span class="value" id="positionSize">0 CHK</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Avg Entry</span>
+              <span class="value" id="avgPrice">$0.00</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Position Value</span>
+              <span class="value" id="positionValue">$0.00</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Unrealized P/L</span>
+              <span class="value" id="unrealizedPnL">$0.00</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Realized P/L</span>
+              <span class="value" id="realizedPnL">$0.00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // ---- CONFIG ----
+    const START_PRICE = 10;
+    const IPO_MULTIPLIER = 11; // ~1000% up (10 -> 110)
+    const DURATION_MS = 5 * 60 * 1000; // 5 minutes
+    const TICK_MS = 1000; // 1 second
+
+    // Price state
+    let price = START_PRICE;
+    let lastPrice = START_PRICE;
+    let highPrice = START_PRICE;
+    const startTime = Date.now();
+    const prices = [];
+
+    // Account state
+    let cash = 1000;
+    let position = 0;
+    let avgEntry = 0;
+    let realizedPnL = 0;
+
+    // DOM
+    const elCurrentPrice = document.getElementById("currentPrice");
+    const elPriceChange = document.getElementById("priceChange");
+    const elOpenPrice = document.getElementById("openPrice");
+    const elHighPrice = document.getElementById("highPrice");
+    const elElapsed = document.getElementById("elapsedTime");
+
+    const elQty = document.getElementById("qtyInput");
+    const elNotional = document.getElementById("notional");
+    const elOrderBtn = document.getElementById("orderBtn");
+    const elBuyTab = document.getElementById("buyTab");
+    const elSellTab = document.getElementById("sellTab");
+
+    const elCash = document.getElementById("cashBalance");
+    const elPos = document.getElementById("positionSize");
+    const elAvg = document.getElementById("avgPrice");
+    const elPosValue = document.getElementById("positionValue");
+    const elUnreal = document.getElementById("unrealizedPnL");
+    const elReal = document.getElementById("realizedPnL");
+
+    const canvas = document.getElementById("priceChart");
+    const ctx = canvas.getContext("2d");
+
+    let mode = "buy";
+
+    function formatMoney(v) {
+      return "$" + v.toFixed(2);
+    }
+
+    function updateElapsed() {
+      const s = Math.floor((Date.now() - startTime) / 1000);
+      const mm = String(Math.floor(s / 60)).padStart(2, "0");
+      const ss = String(s % 60).padStart(2, "0");
+      elElapsed.textContent = `${mm}:${ss}`;
+    }
+
+    function simulatePrice() {
+      const elapsed = Date.now() - startTime;
+      const t = Math.min(elapsed / DURATION_MS, 1);
+
+      // Smooth ramp from 1x to IPO_MULTIPLIER with slight randomness
+      const base = START_PRICE * (1 + t * (IPO_MULTIPLIER - 1));
+      const noise = 1 + (Math.random() - 0.5) * 0.03;
+
+      lastPrice = price;
+      price = Math.max(0.01, base * noise);
+      highPrice = Math.max(highPrice, price);
+      prices.push(price);
+
+      updatePriceUI();
+      drawChart();
+    }
+
+    function updatePriceUI() {
+      elCurrentPrice.textContent = formatMoney(price);
+      elOpenPrice.textContent = formatMoney(START_PRICE);
+      elHighPrice.textContent = formatMoney(highPrice);
+
+      const diff = price - START_PRICE;
+      const pct = (diff / START_PRICE) * 100;
+      elPriceChange.textContent =
+        `${diff >= 0 ? "+" : ""}${diff.toFixed(2)} (${pct.toFixed(1)}%)`;
+      elPriceChange.classList.toggle("down", price < lastPrice);
+
+      const qty = Number(elQty.value) || 0;
+      elNotional.value = formatMoney(qty * price);
+
+      updatePortfolio();
+    }
+
+    function updatePortfolio() {
+      const positionValue = position * price;
+      const unreal = positionValue - position * avgEntry;
+
+      elCash.textContent = formatMoney(cash);
+      elPos.textContent = `${position} CHK`;
+      elAvg.textContent = position ? formatMoney(avgEntry) : "$0.00";
+      elPosValue.textContent = formatMoney(positionValue);
+
+      elUnreal.textContent = formatMoney(unreal);
+      elReal.textContent = formatMoney(realizedPnL);
+
+      elUnreal.classList.toggle("value-positive", unreal > 0);
+      elUnreal.classList.toggle("value-negative", unreal < 0);
+      elReal.classList.toggle("value-positive", realizedPnL > 0);
+      elReal.classList.toggle("value-negative", realizedPnL < 0);
+    }
+
+    function handleOrder() {
+      const qty = Math.max(0, Math.floor(Number(elQty.value) || 0));
+      if (!qty) return;
+
+      if (mode === "buy") {
+        const cost = qty * price;
+        if (cost > cash) {
+          alert("Not enough cash.");
+          return;
+        }
+
+        const newPos = position + qty;
+        avgEntry =
+          newPos === 0
+            ? 0
+            : (avgEntry * position + price * qty) / newPos;
+
+        position = newPos;
+        cash -= cost;
+      } else {
+        if (qty > position) {
+          alert("Not enough shares.");
+          return;
+        }
+
+        const proceeds = qty * price;
+        const pnl = (price - avgEntry) * qty;
+        realizedPnL += pnl;
+        position -= qty;
+        cash += proceeds;
+
+        if (position === 0) avgEntry = 0;
+      }
+
+      updatePortfolio();
+    }
+
+    function setMode(newMode) {
+      mode = newMode;
+      if (mode === "buy") {
+        elBuyTab.classList.add("active", "buy");
+        elSellTab.classList.remove("active");
+        elOrderBtn.classList.remove("sell");
+        elOrderBtn.classList.add("buy");
+        elOrderBtn.textContent = "Buy Chicken Claypot IPO";
+      } else {
+        elSellTab.classList.add("active", "sell");
+        elBuyTab.classList.remove("active");
+        elOrderBtn.classList.remove("buy");
+        elOrderBtn.classList.add("sell");
+        elOrderBtn.textContent = "Sell Chicken Claypot IPO";
+      }
+    }
+
+    function drawChart() {
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      ctx.clearRect(0, 0, width, height);
+
+      if (prices.length < 2) return;
+
+      const padding = 20;
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      const range = maxPrice - minPrice || 1;
+      const stepX = (width - padding * 2) / (prices.length - 1);
+
+      // Base line
+      ctx.strokeStyle = "rgba(148,163,184,0.24)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padding, height - padding);
+      ctx.lineTo(width - padding, height - padding);
+      ctx.stroke();
+
+      // Price line
+      ctx.beginPath();
+      for (let i = 0; i < prices.length; i++) {
+        const x = padding + i * stepX;
+        const y =
+          height -
+          padding -
+          ((prices[i] - minPrice) / range) * (height - padding * 2);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = "#22c55e";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Event wiring
+    elOrderBtn.addEventListener("click", handleOrder);
+
+    elQty.addEventListener("input", () => {
+      const qty = Number(elQty.value) || 0;
+      elNotional.value = formatMoney(qty * price);
+    });
+
+    elBuyTab.addEventListener("click", () => setMode("buy"));
+    elSellTab.addEventListener("click", () => setMode("sell"));
+
+    // Init
+    updatePriceUI();
+    drawChart();
+    updatePortfolio();
+
+    setInterval(() => {
+      simulatePrice();
+      updateElapsed();
+    }, TICK_MS);
+
+    // Optional service worker if you have sw.js
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>
